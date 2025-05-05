@@ -5,10 +5,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -16,11 +18,13 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleService roleService;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleService roleService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleService = roleService;
     }
 
     @Override
@@ -33,7 +37,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User updateUser(Long id, User updatedUser) {
+    public User updateUser(Long id, User updatedUser, List<Long> roleIds) {
         User existingUser = getUserById(id);
 
         if (updatedUser.getUsername() != null) {
@@ -48,8 +52,11 @@ public class UserServiceImpl implements UserService {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
 
-        if (updatedUser.getRoles() != null) {
-            existingUser.setRoles(updatedUser.getRoles());
+        if (roleIds != null && !roleIds.isEmpty()) {
+            Set<Role> newRoles = roleService.getRolesById(roleIds);
+            existingUser.setRoles(newRoles);
+        } else {
+            existingUser.setRoles(existingUser.getRoles());
         }
 
         return userRepository.save(existingUser);
@@ -65,7 +72,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public List<User> getAllUsers() {
         List<User> users = userRepository.findAll();
-        // Явная инициализация ролей
         users.forEach(user -> user.getRoles().size());
         return users;
     }

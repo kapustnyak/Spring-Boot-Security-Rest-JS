@@ -11,39 +11,32 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import ru.kata.spring.boot_security.demo.service.CustomUserDetailService;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    private final SuccessUserHandler successUserHandler;
+public class WebSecurityConfig {
+
     private final CustomUserDetailService customUserDetailService;
 
     @Autowired
-    public WebSecurityConfig(SuccessUserHandler successUserHandler, CustomUserDetailService customUserDetailService) {
-        this.successUserHandler = successUserHandler;
+    public WebSecurityConfig(CustomUserDetailService customUserDetailService) {
         this.customUserDetailService = customUserDetailService;
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeRequests()
-                .antMatchers("/login").permitAll()
-                .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .successHandler(successUserHandler)
-                .failureUrl("/login?error")
-                .permitAll()
-                .and()
-                .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
-                .permitAll();
+                .cors().and().csrf().disable()
+                .authorizeHttpRequests(auth -> auth
+                        .antMatchers("/api/admin/**").hasRole("ADMIN")
+                        .antMatchers("/api/user/**").hasRole("USER")
+                        .anyRequest().authenticated()
+                )
+                .httpBasic();
 
+        return http.build();
     }
 
     @Bean
@@ -55,9 +48,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .build();
     }
 
-
     @Bean
-    @Override
     public UserDetailsService userDetailsService() {
         return customUserDetailService;
     }
