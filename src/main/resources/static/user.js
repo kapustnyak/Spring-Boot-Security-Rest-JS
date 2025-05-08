@@ -50,6 +50,8 @@ function renderUsersTable(user) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const addButton = document.getElementById('addUserBtn');
+    addButton.classList.add('btn', 'btn-primary');
     try {
         await loadCurrentUser();
     } catch (error) {
