@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public List<User> getAllUsers() {
         List<User> users = userRepository.findAll();
-        users.forEach(user -> user.getRoles().size());
+        users.forEach(user -> user.getRoles().size()); // Принудительная инициализация
         return users;
     }
 
