@@ -167,6 +167,7 @@ async function openEditModal(userId) {
         form.querySelector('input[type="text"][id="displayUserId"]').value = userId;
         form.querySelector('input[name="username"]').value = user.username;
         form.querySelector('input[name="email"]').value = user.email;
+        form.querySelector('input[name="password"]').value = '';
 
         const roleSelect = form.querySelector('select[name="roles"]');
         roleSelect.innerHTML = '';
