@@ -233,11 +233,10 @@ async function handleEditUserSubmit(event) {
     const selectedRoles = Array.from(rolesSelect.selectedOptions).map(option => parseInt(option.value));
 
     const userData = {
-        id: parseInt(userId),
         username: formData.get('username'),
         email: formData.get('email'),
-        password: formData.get('password') || null,
-        roles: selectedRoles
+        password: formData.get('password')?.trim() || null,
+        roles: selectedRoles.length > 0 ? selectedRoles : null
     };
 
     try {

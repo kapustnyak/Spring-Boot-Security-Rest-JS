@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.kata.spring.boot_security.demo.dto.UserUpdateRequest;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
@@ -98,4 +99,28 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Password cannot be empty");
         }
     }
+
+    @Override
+    @Transactional
+    public User updateUserFromDto(Long id, UserUpdateRequest dto) {
+        User existingUser = userRepository.findById(id).orElse(null);
+        if (existingUser == null) {
+            return null;
+        }
+
+        existingUser.setUsername(dto.getUsername());
+        existingUser.setEmail(dto.getEmail());
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            existingUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
+            Set<Role> roles = roleService.getRolesById(dto.getRoles());
+            existingUser.setRoles(roles);
+        }
+
+        return userRepository.save(existingUser);
+    }
+
 }

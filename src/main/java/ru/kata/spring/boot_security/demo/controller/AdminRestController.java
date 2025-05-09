@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.dto.UserUpdateRequest;
 import ru.kata.spring.boot_security.demo.model.Role;
@@ -32,7 +31,6 @@ public class AdminRestController {
 
 
     @GetMapping("/current-user")
-    @Transactional
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
         User currentUser = userService.getUserByUsername(authentication.getName());
         if (currentUser != null) {
@@ -44,7 +42,6 @@ public class AdminRestController {
 
 
     @GetMapping("/users")
-    @Transactional
     public ResponseEntity<List<User>> getUsers() {
         List<User> users = userService.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
@@ -85,17 +82,13 @@ public class AdminRestController {
     @PutMapping("/users/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id,
                                            @RequestBody UserUpdateRequest request) {
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
-
-        User updated = userService.updateUser(id, user, request.getRoles());
+        User updated = userService.updateUserFromDto(id, request);
         if (updated == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         return ResponseEntity.ok(updated);
     }
+
 
     @GetMapping("/roles")
     public ResponseEntity<List<Role>> getRoles() {

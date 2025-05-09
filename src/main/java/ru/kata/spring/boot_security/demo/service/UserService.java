@@ -1,5 +1,6 @@
 package ru.kata.spring.boot_security.demo.service;
 
+import ru.kata.spring.boot_security.demo.dto.UserUpdateRequest;
 import ru.kata.spring.boot_security.demo.model.User;
 
 
@@ -12,4 +13,5 @@ public interface UserService {
     List<User> getAllUsers();
     User getUserByUsername(String username);
     User getUserById(Long id);
+    User updateUserFromDto(Long id, UserUpdateRequest dto);
 }
