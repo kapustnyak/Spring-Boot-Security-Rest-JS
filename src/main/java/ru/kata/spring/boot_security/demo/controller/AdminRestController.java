@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.dto.UserUpdateRequest;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
@@ -31,7 +32,6 @@ public class AdminRestController {
 
 
     @GetMapping("/current-user")
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
         User currentUser = userService.getUserByUsername(authentication.getName());
@@ -44,16 +44,13 @@ public class AdminRestController {
 
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<List<User>> getUsers() {
         List<User> users = userService.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    // 🔹 Получение одного пользователя по ID (только админ)
     @GetMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
         if (user != null) {
@@ -64,14 +61,12 @@ public class AdminRestController {
 
 
     @PostMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> addUser(@RequestBody User user) {
         User savedUser = userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
     @DeleteMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id, Principal principal) {
         User user = userService.getUserById(id);
         if (user == null) {
@@ -88,11 +83,14 @@ public class AdminRestController {
     }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> updateUser(@PathVariable Long id,
-                                           @RequestBody User updatedUser,
-                                           @RequestParam(value = "roles", required = false) List<Long> roleIds) {
-        User updated = userService.updateUser(id, updatedUser, roleIds);
+                                           @RequestBody UserUpdateRequest request) {
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
+
+        User updated = userService.updateUser(id, user, request.getRoles());
         if (updated == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }

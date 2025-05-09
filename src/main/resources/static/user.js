@@ -23,7 +23,9 @@ function loadCurrentUser() {
             const currentUserEmail = document.getElementById('currentUserEmail');
             currentUserEmail.textContent = user.email;
             currentUserEmail.dataset.userId = user.id;
-            document.getElementById('currentUserRoles').textContent = user.roles;
+            document.getElementById('currentUserRoles').textContent =
+                user.roles.map(role => role.name.replace('ROLE_', '')).join(', ');
+
             renderUsersTable(user);
         })
         .catch(error => {
@@ -45,13 +47,11 @@ function renderUsersTable(user) {
     tr.appendChild(createCell(user.id));
     tr.appendChild(createCell(user.username));
     tr.appendChild(createCell(user.email));
-    tr.appendChild(createCell(user.roles));
+    tr.appendChild(createCell(user.roles.map(role => role.name.replace('ROLE_', '')).join(', ')));
     tbody.appendChild(tr);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const addButton = document.getElementById('addUserBtn');
-    addButton.classList.add('btn', 'btn-primary');
     try {
         await loadCurrentUser();
     } catch (error) {

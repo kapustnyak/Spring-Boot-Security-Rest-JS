@@ -13,7 +13,8 @@ function loadCurrentUser() {
             const currentUserEmail = document.getElementById('currentUserEmail');
             currentUserEmail.textContent = user.email;
             currentUserEmail.dataset.userId = user.id;
-            document.getElementById('currentUserRoles').textContent = user.roles.map(role => role.name).join(", ");
+            document.getElementById('currentUserRoles').textContent =
+                user.roles.map(role => role.name.replace('ROLE_', '')).join(', ');
         })
         .catch(error => {
             console.error('Error loading current user:', error);
@@ -75,7 +76,7 @@ function renderUsersTable(users) {
         tr.appendChild(createCell(user.id));
         tr.appendChild(createCell(user.username));
         tr.appendChild(createCell(user.email));
-        tr.appendChild(createCell(user.roles.map(role => role.name).join(", ")));
+        tr.appendChild(createCell(user.roles.map(role => role.name.replace('ROLE_', '')).join(', ')));
 
         const editTd = document.createElement('td');
         const editButton = document.createElement('button');
@@ -116,7 +117,7 @@ function loadUserInfo() {
                 <td>${user.id}</td>
                 <td>${user.username}</td>
                 <td>${user.email}</td>
-                <td>${user.roles}</td>
+                <td>${user.roles.map(role => role.name.replace('ROLE_', '')).join(', ')}</td>
             </tr>
         `;
         })
@@ -144,7 +145,6 @@ async function loadRoles() {
     }
 }
 
-//////открытие модального окна редактирования///////
 async function openEditModal(userId) {
     try {
         const response = await fetch(`/api/users/${userId}`, {
@@ -159,8 +159,12 @@ async function openEditModal(userId) {
         currentUserEditId = userId;
 
         const form = document.getElementById('editUserForm');
-        form.querySelector('input[type="hidden"][name="id"]').value = userId;
-        form.querySelector('input[type="text"][name="id"]').value = userId;
+
+        const idField = form.querySelector('input[type="hidden"][name="id"]');
+        if (!idField) throw new Error('Hidden ID field not found');
+        idField.value = userId;
+
+        form.querySelector('input[type="text"][id="displayUserId"]').value = userId;
         form.querySelector('input[name="username"]').value = user.username;
         form.querySelector('input[name="email"]').value = user.email;
 
@@ -185,6 +189,8 @@ async function openEditModal(userId) {
         alert('Error loading user data. Please try again.');
     }
 }
+
+
 
 /////открытие модального окна удаления///////
 async function openDeleteModal(userId) {
@@ -222,10 +228,8 @@ async function handleEditUserSubmit(event) {
     const currentUserId = document.getElementById('currentUserEmail').dataset.userId;
 
     const rolesSelect = event.target.querySelector('select[name="roles"]');
-    const selectedRoles = Array.from(rolesSelect.selectedOptions).map(option => ({
-        id: parseInt(option.value),
-        name: option.textContent
-    }));
+
+    const selectedRoles = Array.from(rolesSelect.selectedOptions).map(option => parseInt(option.value));
 
     const userData = {
         id: parseInt(userId),
@@ -326,13 +330,6 @@ async function handleNewUserSubmit(event) {
         event.target.reset();
         await loadUsers();
 
-        // Закрываем модальное окно
-        document.getElementById('newUserModal').classList.remove('show');
-        document.body.classList.remove('modal-open');
-        document.querySelector('.modal-backdrop').remove();
-
-        // Переход к таблице
-        document.querySelector('a[href="#usersTable"]').click();
     } catch (error) {
         console.error('Error creating user:', error);
         alert(`Error creating user: ${error.message}`);
@@ -370,29 +367,27 @@ async function loadRolesToSelect() {
 ///то, что загружаем на страницу при заходе на нее///////
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Загружаем начальные данные
         await loadCurrentUser();
         await loadUsers();
         await loadUserInfo();
         await loadRolesToSelect();
 
-        // Добавляем обработчики форм
+        // Проверка наличия элементов перед обработкой событий
         const editUserForm = document.getElementById('editUserForm');
-        const deleteUserForm = document.getElementById('deleteUserForm');
-        const newUserForm = document.getElementById('newUserForm');
-
         if (editUserForm) {
             editUserForm.addEventListener('submit', handleEditUserSubmit);
         }
 
+        const deleteUserForm = document.getElementById('deleteUserForm');
         if (deleteUserForm) {
             deleteUserForm.addEventListener('submit', handleDeleteUserSubmit);
         }
 
+        const newUserForm = document.getElementById('newUserForm');
         if (newUserForm) {
             newUserForm.addEventListener('submit', handleNewUserSubmit);
         }
     } catch (error) {
-        console.error('Error initializing page:', error);
+        console.error('Ошибка инициализации страницы:', error);
     }
 });
