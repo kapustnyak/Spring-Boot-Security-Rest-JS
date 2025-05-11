@@ -257,7 +257,7 @@ async function handleEditUserSubmit(event) {
 
         if (userId === currentUserId && currentUserId) {
             const hasAdminRole = selectedRoles.some(role => role.name === 'ADMIN' || role.name === 'ROLE_ADMIN');
-            window.location.href = hasAdminRole ? '/admin' : '/user';
+            window.location.href = hasAdminRole ? '/admin.html' : '/user.html';
         }
     } catch (error) {
         console.error('Error updating user:', error);
